@@ -1,51 +1,50 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
-void parent(int child_pid) {
-	int waited_child_pid = wait((int *) 0);
+#define BUFFER_SIZE 32
 
-	if (waited_child_pid < 0) {
-		// There are no children error
-		fprintf(2, "Wait error: %d\n", waited_child_pid);
-		exit(1);
-	}
-	
-	printf("Children %d ended \n", waited_child_pid);	
+void error(char * msg) {
+	fprintf(2, msg);
+	exit(1);
+}
 
-	char buf[8];
-
+void read_stdin(char * buf) {
 	int read_bytes = read(0, buf, sizeof buf);
 	
 	if (read_bytes <= 0) {
-		// Read error
-		fprintf(2, "Read error\n");
-		exit(1);
-	} else {
-		if (write(1, buf, read_bytes) != read_bytes) {
-			// Write error
-			fprintf(2, "Write error\n");
-			exit(1);
-		}
+		error("Read error\n");
 	}
-
-	exit(0);
-}
-
-void child() {
-	printf("child: exiting\n");
-	exit(0);
 }
 
 int main() {
-	int child_pid = fork();
+	// Init pipe
+	int p[2];
+	pipe(p);
 
-	if (child_pid > 0) {
-		parent(child_pid);
-	} else if (child_pid == 0) {
-		child();
+	// Run different methods depending in what process we are 
+	if (fork() > 0) {
+		// Read stdin:
+		char input[BUFFER_SIZE];
+		read_stdin(input);
+
+		// Send input:
+		fprintf(p[1], input);
+
+		close(p[0]);
+		close(p[1]);
+
+		exit(0);
 	} else {
-		// Fork error
-		fprintf(2, "Fork error\n");
+		char * argv[2];
+		argv[0] = "wc";
+		argv[1] = 0;
+
+		close(0);
+		dup(p[0]);
+		close(p[0]);
+		close(p[1]);
+		
+		exec("wc", argv);
 	}
 
 	exit(1);
