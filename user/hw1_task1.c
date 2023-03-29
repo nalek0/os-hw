@@ -9,7 +9,7 @@ void error(char * msg) {
 }
 
 void read_stdin(char * buf) {
-	int read_bytes = read(0, buf, sizeof buf);
+	int read_bytes = read(0, buf, BUFFER_SIZE * sizeof(char));
 	
 	if (read_bytes <= 0) {
 		error("Read error\n");
@@ -30,20 +30,25 @@ int main() {
 		// Send input:
 		fprintf(p[1], input);
 
+		// Closing pipe
 		close(p[0]);
 		close(p[1]);
+
+		wait((int *) 0);
 
 		exit(0);
 	} else {
-		char * argv[2];
-		argv[0] = "wc";
-		argv[1] = 0;
-
+		// Set p[0] as input
 		close(0);
 		dup(p[0]);
+
+		// Close pipe
 		close(p[0]);
 		close(p[1]);
 		
+		// Exec wc
+		char * argv[2] = { "wc", 0 };
+
 		exec("wc", argv);
 	}
 
