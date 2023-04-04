@@ -101,7 +101,7 @@ uint64 sys_hello(void)
   return n1 + n2;
 }
 
-uint64 sys_lock(void)
+uint64 sys_lockcall(void)
 {
   int action, action_arg;
   
@@ -125,6 +125,6 @@ uint64 sys_lock(void)
 
     return 0;
   default:
-      return 1;
+    return 1;
   }
 }

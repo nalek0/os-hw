@@ -1,4 +1,5 @@
 #include "kernel/types.h"
+#include "kernel/syslockactions.h"
 #include "user/user.h"
 
 #define BUFFER_SIZE 32
@@ -18,6 +19,9 @@ int main(int argc, char *argv[]) {
 
 	char * message = argv[1];
 
+	printf("%d\n", hello(1, 2));
+	int output_lock = lockcall(INIT_ACTION, 0);
+
 	int from_par[2];
 	int from_ch[2];
 	pipe(from_par);
@@ -25,6 +29,8 @@ int main(int argc, char *argv[]) {
 
 	if (fork() > 0) {
 		// Parent
+
+		int parent_pid = getpid();
 
 		close(PIPE_READ(from_par));
 		close(PIPE_WRITE(from_ch));
@@ -46,14 +52,30 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			printf("<%d>: received <%s>\n", getpid(), buf);
+			// Sync write:
+			if (lockcall(ACQUIRE_ACTION, output_lock) != 0) {
+				error("Lock error");
+			}
+
+			printf("<%d | parent>: received <%s>\n", parent_pid, buf);
+
+			if (lockcall(RELEASE_ACTION, output_lock) != 0) {
+				error("Lock error");
+			}
+			// End
 		}
 
 		close(PIPE_READ(from_ch));
 
+		if (lockcall(REMOVE_ACTION, output_lock) != 0) {
+			error("Lock error");
+		}
+
 		exit(0);
 	} else {
 		// Children
+
+		int child_pid = getpid();
 
 		close(PIPE_WRITE(from_par));
 		close(PIPE_READ(from_ch));
@@ -67,7 +89,20 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 
-			printf("<%d>: received <%s>\n", getpid(), buf);
+			// Sync write:
+			if (lockcall(ACQUIRE_ACTION, output_lock) != 0) {
+				error("Lock error");
+			}
+
+			printf("<%d | children>: received <%s>\n", child_pid, buf);
+
+			if (lockcall(RELEASE_ACTION, output_lock) != 0) {
+				error("Lock error");
+			}
+			// End
+
+			printf("End\n");
+
 			write(PIPE_WRITE(from_ch), buf, 1);
 		}
 
