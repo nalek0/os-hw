@@ -5,6 +5,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "syslockactions.h"
 
 uint64
 sys_exit(void)
@@ -98,4 +99,32 @@ uint64 sys_hello(void)
   argint(1, &n2);
 
   return n1 + n2;
+}
+
+uint64 sys_lock(void)
+{
+  int action, action_arg;
+  
+  argint(0, &action);
+  argint(1, &action_arg);
+
+  switch (action)
+  {
+  case INIT_ACTION:
+    return sleeplocktable_init();
+  case REMOVE_ACTION:
+    sleeplocktable_remove(action_arg);
+
+    return 0;
+  case ACQUIRE_ACTION:
+    sleeplocktable_acquire(action_arg);
+
+    return 0;
+  case RELEASE_ACTION:
+    sleeplocktable_release(action_arg);
+
+    return 0;
+  default:
+      return 1;
+  }
 }
