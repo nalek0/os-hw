@@ -167,13 +167,25 @@ void pr_msg(const char *fmt, ...)
   release(&dmBuffer.lock);
 }
 
-void print_buff() {
+void cpybuf(uint64 addr) {
+  acquire(&dmBuffer.lock);
+  
+  struct proc *p = myproc();
+  
+  if (dmBuffer.cursor_start <= dmBuffer.cursor_end) {
+    char * from = dmBuffer.buffer + dmBuffer.cursor_start;
+    uint64 size = sizeof(char) * (dmBuffer.cursor_end - dmBuffer.cursor_start);
 
-    acquire(&dmBuffer.lock);
+    copyout(p->pagetable, addr, from, size);
+  } else {
+    char * from_first = dmBuffer.buffer + dmBuffer.cursor_start;
+    uint64 size_first = sizeof(char) * (DMBSIZE - dmBuffer.cursor_start);
+    copyout(p->pagetable, addr, from_first, size_first);
 
-    for (int i = dmBuffer.cursor_start; i != dmBuffer.cursor_end; i = (i + 1) % DMBSIZE) {
-        consputc(dmBuffer.buffer[i]);
-    }
+    char * from_second = dmBuffer.buffer + 0;
+    uint64 size_second = sizeof(char) * (dmBuffer.cursor_end - 0);
+    copyout(p->pagetable, addr + size_first, from_second, size_second);
+  }
 
-    release(&dmBuffer.lock);
+  release(&dmBuffer.lock);
 }

@@ -93,7 +93,9 @@ sys_uptime(void)
 uint64
 sys_dmesg(void)
 {
-  print_buff();
+  uint64 addr;
+  argaddr(0, &addr);
+  cpybuf(addr);
 
   return 0;
 }

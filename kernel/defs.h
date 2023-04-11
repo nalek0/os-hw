@@ -191,4 +191,4 @@ void            virtio_disk_intr(void);
 // diag.c
 void            initDMBuffer(void);
 void            pr_msg(const char *fmt, ...);
-void            print_buff(void);
+void            cpybuf(uint64);
