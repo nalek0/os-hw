@@ -6,7 +6,7 @@ int
 main()
 {
   for(uint i = 0; i < 5; i++){
-    dmesgsend("Message!");
+    dmesgsend("1234567\n");
     sleep(1);
   }
 

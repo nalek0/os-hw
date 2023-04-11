@@ -15,8 +15,8 @@ struct {
     // buffer
     char buffer[DMBSIZE];
 
-    // cursor, that is references to the first unset buffer byte
-    uint cursor;
+    uint cursor_start;
+    uint cursor_end;
 
     // buffer lock
     struct spinlock lock;
@@ -30,11 +30,22 @@ void initDMBuffer() {
 }
 
 static void setChar(uint ind, char ch) {
-    dmBuffer.buffer[ind] = ch;
+  if (ind < 0 || ind >= DMBSIZE) {
+    panic("Invalid set index");
+  }
+
+  dmBuffer.buffer[ind] = ch;
 }
 
 static void setNextChar(char ch) {
-    setChar(dmBuffer.cursor++, ch);
+  uint index = dmBuffer.cursor_end;
+  dmBuffer.cursor_end = (dmBuffer.cursor_end + 1) % DMBSIZE;
+
+  if (dmBuffer.cursor_end == dmBuffer.cursor_start) {
+    dmBuffer.cursor_start = (dmBuffer.cursor_start + 1) % DMBSIZE;
+  }
+
+  setChar(index, ch);
 }
 
 static char digits[] = "0123456789abcdef";
@@ -160,11 +171,9 @@ void print_buff() {
 
     acquire(&dmBuffer.lock);
 
-    for (int i = 0; i < dmBuffer.cursor; i++) {
+    for (int i = dmBuffer.cursor_start; i != dmBuffer.cursor_end; i = (i + 1) % DMBSIZE) {
         consputc(dmBuffer.buffer[i]);
     }
-
-    consputc('\n');
 
     release(&dmBuffer.lock);
 }
