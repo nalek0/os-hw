@@ -11,7 +11,7 @@
 
 struct {
     // buffer
-    char buffer[DMBSiZE];
+    char buffer[DMBSIZE];
 
     // cursor, that is references to the first unset buffer byte
     uint cursor;
@@ -22,6 +22,8 @@ struct {
 
 // inits diagnostics messages buffer
 void initDMBuffer() {
+    printf("init: dmbuffer\n");
+
     initlock(&dmBuffer.lock, "dmbuffer");
 }
 
@@ -83,12 +85,15 @@ void pr_msg(const char *str) {
     release(&dmBuffer.lock);
 }
 
-void get_buff(char * result) {
+void print_buff() {
+
     acquire(&dmBuffer.lock);
 
     for (int i = 0; i < dmBuffer.cursor; i++) {
-        result[i] = dmBuffer.buffer[i];
+        consputc(dmBuffer.buffer[i]);
     }
+
+    consputc('\n');
 
     release(&dmBuffer.lock);
 }

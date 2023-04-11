@@ -189,6 +189,6 @@ void            virtio_disk_intr(void);
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
 
 // diag.c
-void            initDMBuffer();
-void            pr_msg(const char *str);
-void            get_buff(char * result);
+void            initDMBuffer(void);
+void            pr_msg(const char *);
+void            print_buff(void);

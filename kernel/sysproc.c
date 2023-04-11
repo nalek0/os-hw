@@ -93,11 +93,19 @@ sys_uptime(void)
 uint64
 sys_dmesg(void)
 {
-  char result[DMBSiZE];
+  print_buff();
 
-  get_buff(result);
+  return 0;
+}
 
-  printf("[%d] %s", ticks, result);
+uint64
+sys_dmesgsend(void)
+{
+  char msg[128];
 
+  argstr(0, msg, 128);
+
+  pr_msg(msg);
+  
   return 0;
 }
