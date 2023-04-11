@@ -1,3 +1,5 @@
+#include <stdarg.h>
+
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
@@ -37,6 +39,16 @@ static void setNextChar(char ch) {
 
 static char digits[] = "0123456789abcdef";
 
+// copy-paste of the method printptr(...) in the kernel/printf.c
+static void setNextPtr(uint64 x) {
+  setNextChar('0');
+  setNextChar('x');
+
+  for (int i = 0; i < (sizeof(uint64) * 2); i++, x <<= 4) {
+    setNextChar(digits[x >> (sizeof(uint64) * 8 - 4)]);
+  }
+}
+
 // copy-paste of the method printint(...) in the kernel/printf.c
 static void setNextInt(int xx, int base, int sign) {
   char buf[16];
@@ -60,29 +72,88 @@ static void setNextInt(int xx, int base, int sign) {
     setNextChar(buf[i]);
 }
 
-static void setNextString(const char * str) {
-    for (uint i = 0; str[i]; i++) {
-        setNextChar(str[i]);
-    }
-} 
-
 // puts message in the dm buffer
-void pr_msg(const char *str) {
-    acquire(&dmBuffer.lock);
+void pr_msg(const char *fmt, ...)
+{
+  // lock:
+  acquire(&dmBuffer.lock);
 
-    setNextChar('[');
+  // Printing current ticks
+  setNextChar('[');
 
-    // Printing current ticks
-    uint xticks;
-    acquire(&tickslock);
-    xticks = ticks;
-    release(&tickslock);
-    setNextInt(xticks, 10, 1);
+  uint xticks;
+  acquire(&tickslock);
+  xticks = ticks;
+  release(&tickslock);
+  setNextInt(xticks, 10, 1);
 
-    setNextChar(']');
-    setNextString(str);
+  setNextChar(']');
 
-    release(&dmBuffer.lock);
+  // Put fmt message:
+  va_list ap;
+
+  if (fmt == 0) {
+    panic("null fmt");
+  }
+
+  va_start(ap, fmt);
+
+  char c;
+  char * s;
+
+  for (int i = 0; (c = fmt[i] & 0xff) != 0; i++) {
+    if (c != '%'){
+      setNextChar(c);
+
+      continue;
+    }
+
+    c = fmt[++i] & 0xff;
+    
+    if (c == 0) {
+      break;
+    }
+
+    switch(c){
+    case 'd':
+      setNextInt(va_arg(ap, int), 10, 1);
+
+      break;
+    case 'x':
+      setNextInt(va_arg(ap, int), 16, 1);
+
+      break;
+    case 'p':
+      setNextPtr(va_arg(ap, uint64));
+
+      break;
+    case 's':
+      if((s = va_arg(ap, char*)) == 0) {
+        s = "(null)";
+      }
+
+      for(; *s; s++) {
+        setNextChar(*s);
+      }
+
+      break;
+    case '%':
+      setNextChar('%');
+
+      break;
+    default:
+      // Print unknown % sequence to draw attention.
+      setNextChar('%');
+      setNextChar(c);
+
+      break;
+    }
+  }
+
+  va_end(ap);
+
+  // unlock:
+  release(&dmBuffer.lock);
 }
 
 void print_buff() {
