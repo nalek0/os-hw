@@ -89,3 +89,15 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_dmesg(void)
+{
+  char result[DMBSiZE];
+
+  get_buff(result);
+
+  printf("[%d] %s", ticks, result);
+
+  return 0;
+}
