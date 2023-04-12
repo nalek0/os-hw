@@ -32,7 +32,11 @@ static void setChar(uint ind, char ch) {
 }
 
 static void setNextChar(char ch) {
-    setChar(dmBuffer.cursor++, ch);
+  if (dmBuffer.cursor == DMBSIZE) {
+    panic("Buffer overflow");
+  }
+  
+  setChar(dmBuffer.cursor++, ch);
 }
 
 static char digits[] = "0123456789abcdef";
