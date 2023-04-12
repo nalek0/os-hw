@@ -35,7 +35,7 @@ static void setNextChar(char ch) {
   if (dmBuffer.cursor == DMBSIZE) {
     panic("Buffer overflow");
   }
-  
+
   setChar(dmBuffer.cursor++, ch);
 }
 
