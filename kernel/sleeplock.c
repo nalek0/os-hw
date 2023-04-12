@@ -33,6 +33,7 @@ int sleeplocktable_init() {
     if (sleeplocktable.used[i] == 0) {
       sleeplocktable.used[i] = 1;
       result = i;
+
       break;
     }
   }
@@ -51,19 +52,27 @@ void sleeplocktable_remove(uint8 ind) {
 }
 
 void sleeplocktable_acquire(uint8 ind) {
+  struct sleeplock * lock;
+
   acquire(&sleeplocktable.lock);
 
-  acquiresleep(&sleeplocktable.locks[ind]);
+  lock = &sleeplocktable.locks[ind];
   
   release(&sleeplocktable.lock);
+
+  acquiresleep(lock);
 }
 
 void sleeplocktable_release(uint8 ind) {
+  struct sleeplock * lock;
+
   acquire(&sleeplocktable.lock);
 
-  releasesleep(&sleeplocktable.locks[ind]);
+  lock = &sleeplocktable.locks[ind];
   
   release(&sleeplocktable.lock);
+
+  releasesleep(lock);
 }
 
 

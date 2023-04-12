@@ -57,7 +57,7 @@ int main(int argc, char *argv[]) {
 				error("Lock error");
 			}
 
-			printf("<%d | parent>: received <%s>\n", parent_pid, buf);
+			printf("<%d>: received <%s>\n", parent_pid, buf);
 
 			if (lockcall(RELEASE_ACTION, output_lock) != 0) {
 				error("Lock error");
@@ -94,14 +94,12 @@ int main(int argc, char *argv[]) {
 				error("Lock error");
 			}
 
-			printf("<%d | children>: received <%s>\n", child_pid, buf);
+			printf("<%d>: received <%s>\n", child_pid, buf);
 
 			if (lockcall(RELEASE_ACTION, output_lock) != 0) {
 				error("Lock error");
 			}
 			// End
-
-			printf("End\n");
 
 			write(PIPE_WRITE(from_ch), buf, 1);
 		}
