@@ -6,11 +6,13 @@ int
 main()
 {
   for(uint i = 0; i < 5; i++){
-    dmesgsend("Message!");
+    dmesgsend(" msg\n");
     sleep(1);
   }
 
+  printf("Buffer: {\n");
   dmesg();
+  printf("}\n");
 
   exit(0);
 }

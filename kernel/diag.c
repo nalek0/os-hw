@@ -97,7 +97,5 @@ void print_buff() {
         consputc(dmBuffer.buffer[i]);
     }
 
-    consputc('\n');
-
     release(&dmBuffer.lock);
 }
