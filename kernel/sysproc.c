@@ -89,3 +89,23 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_dmesg(void)
+{
+  print_buff();
+
+  return 0;
+}
+
+uint64
+sys_dmesgsend(void)
+{
+  char msg[128];
+
+  argstr(0, msg, 128);
+
+  pr_msg(msg);
+  
+  return 0;
+}
