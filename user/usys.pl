@@ -38,3 +38,5 @@ entry("sleep");
 entry("uptime");
 entry("dmesg");
 entry("dmesgsend");
+entry("hello");
+entry("lockcall");

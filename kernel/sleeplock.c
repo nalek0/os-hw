@@ -1,5 +1,4 @@
 // Sleeping locks
-
 #include "types.h"
 #include "riscv.h"
 #include "defs.h"
@@ -8,6 +7,75 @@
 #include "spinlock.h"
 #include "proc.h"
 #include "sleeplock.h"
+
+struct {
+  struct sleeplock locks[SLTABLE_SIZE];
+  uint8 used[SLTABLE_SIZE];
+  struct spinlock lock;
+} sleeplocktable;
+
+void sleeplocktableinit() {
+  for (uint8 i = 0; i < SLTABLE_SIZE; i++) {
+    initsleeplock(&sleeplocktable.locks[i], "Global sleep lock");
+
+    sleeplocktable.used[i] = 0;
+  }
+
+  initlock(&sleeplocktable.lock, "Sleeplock table");
+}
+
+int sleeplocktable_init() {
+  int result = -1;
+  
+  acquire(&sleeplocktable.lock);
+
+  for (uint8 i = 0; i < SLTABLE_SIZE; i++) {
+    if (sleeplocktable.used[i] == 0) {
+      sleeplocktable.used[i] = 1;
+      result = i;
+
+      break;
+    }
+  }
+  
+  release(&sleeplocktable.lock);
+
+  return result;
+}
+
+void sleeplocktable_remove(uint8 ind) {
+  acquire(&sleeplocktable.lock);
+
+  sleeplocktable.used[ind] = 0;
+  
+  release(&sleeplocktable.lock);
+}
+
+void sleeplocktable_acquire(uint8 ind) {
+  struct sleeplock * lock;
+
+  acquire(&sleeplocktable.lock);
+
+  lock = &sleeplocktable.locks[ind];
+  
+  release(&sleeplocktable.lock);
+
+  acquiresleep(lock);
+}
+
+void sleeplocktable_release(uint8 ind) {
+  struct sleeplock * lock;
+
+  acquire(&sleeplocktable.lock);
+
+  lock = &sleeplocktable.locks[ind];
+  
+  release(&sleeplocktable.lock);
+
+  releasesleep(lock);
+}
+
+
 
 void
 initsleeplock(struct sleeplock *lk, char *name)
@@ -50,6 +118,3 @@ holdingsleep(struct sleeplock *lk)
   release(&lk->lk);
   return r;
 }
-
-
-

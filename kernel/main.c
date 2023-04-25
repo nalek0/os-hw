@@ -28,6 +28,7 @@ main()
     iinit();         // inode table
     initDMBuffer();  // dmbuffer init
     fileinit();      // file table
+    sleeplocktableinit(); // init sleeplock table
     virtio_disk_init(); // emulated hard disk
     userinit();      // first user process
     __sync_synchronize();

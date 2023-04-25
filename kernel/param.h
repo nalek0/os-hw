@@ -12,3 +12,4 @@
 #define FSSIZE       2000  // size of file system in blocks
 #define MAXPATH      128   // maximum file path name
 #define DMBSIZE      128 // diagnotic messages buffer size
+#define SLTABLE_SIZE 32  // maximum number of the process loks

@@ -124,6 +124,13 @@ void            releasesleep(struct sleeplock*);
 int             holdingsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
 
+// sleeplocktable.c
+void            sleeplocktableinit(void);
+int             sleeplocktable_init(void);
+void            sleeplocktable_remove(uint8 ind);
+void            sleeplocktable_acquire(uint8 ind);
+void            sleeplocktable_release(uint8 ind);
+
 // string.c
 int             memcmp(const void*, const void*, uint);
 void*           memmove(void*, const void*, uint);

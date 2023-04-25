@@ -24,6 +24,8 @@ int sleep(int);
 int uptime(void);
 int dmesg(void *);
 int dmesgsend(const char *);
+int hello(int, int);
+int lockcall(int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);
