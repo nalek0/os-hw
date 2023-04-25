@@ -1,3 +1,4 @@
+#include "kernel/param.h"
 #include "kernel/types.h"
 #include "kernel/syslockactions.h"
 #include "user/user.h"
@@ -70,6 +71,12 @@ int main(int argc, char *argv[]) {
 		if (lockcall(REMOVE_ACTION, output_lock) != 0) {
 			error("Lock error");
 		}
+
+		char dmbuf[DMBSIZE];
+
+		dmesg(dmbuf);
+
+		printf("Saved buff:\n%s", dmbuf);
 
 		exit(0);
 	} else {

@@ -11,5 +11,5 @@
 #define NBUF         (MAXOPBLOCKS*3)  // size of disk block cache
 #define FSSIZE       2000  // size of file system in blocks
 #define MAXPATH      128   // maximum file path name
-#define DMBSIZE      1024 // diagnotic messages buffer size
+#define DMBSIZE      2048 // diagnotic messages buffer size
 #define SLTABLE_SIZE 32  // maximum number of the process loks
