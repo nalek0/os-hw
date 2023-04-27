@@ -107,6 +107,7 @@ extern uint64 sys_dmesg(void);
 extern uint64 sys_dmesgsend(void);
 extern uint64 sys_hello(void);
 extern uint64 sys_lockcall(void);
+extern uint64 sys_diagmode(void);
 
 // An array mapping syscall numbers from syscall.h
 // to the function that handles the system call.
@@ -134,8 +135,9 @@ static uint64 (*syscalls[])(void) = {
   [SYS_close]   sys_close,
   [SYS_dmesg]   sys_dmesg,
   [SYS_dmesgsend] sys_dmesgsend,
-  [SYS_hello]   sys_hello,
-  [SYS_lockcall]sys_lockcall,
+  [SYS_hello]     sys_hello,
+  [SYS_lockcall]  sys_lockcall,
+  [SYS_diagmode]  sys_diagmode,
 };
 
 static char * syscall_names[] = {
@@ -164,6 +166,7 @@ static char * syscall_names[] = {
   [SYS_dmesgsend] "sys_dmesgsend",
   [SYS_hello]     "sys_hello",
   [SYS_lockcall]  "sys_lockcall",
+  [SYS_diagmode]  "sys_diagmode",
 };
 
 void

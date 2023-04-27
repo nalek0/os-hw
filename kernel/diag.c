@@ -18,6 +18,10 @@ struct {
     uint cursor_start;
     uint cursor_end;
 
+    uint mode;
+    uint64 since;
+    uint64 until;
+
     // buffer lock
     struct spinlock lock;
 } dmBuffer;
@@ -27,6 +31,8 @@ void initDMBuffer() {
     printf("init: dmbuffer\n");
 
     initlock(&dmBuffer.lock, "dmbuffer");
+
+    dmBuffer.mode = DIAG_MODE_OFF;
 }
 
 static void setChar(uint ind, char ch) {
@@ -86,6 +92,16 @@ static void setNextInt(int xx, int base, int sign) {
 // puts message in the dm buffer
 void pr_msg(const char *fmt, ...)
 {
+  uint current_time;
+  
+  acquire(&tickslock);
+  current_time = ticks;
+  release(&tickslock);
+  
+  if (current_time > dmBuffer.until || current_time < dmBuffer.since) {
+    return;
+  }
+
   // lock:
   acquire(&dmBuffer.lock);
 
@@ -188,4 +204,31 @@ void cpybuf(uint64 addr) {
   }
 
   release(&dmBuffer.lock);
+}
+
+int
+update_diagmode(int mode, uint64 time) {
+  if (mode == DIAG_MODE_ON) {
+    dmBuffer.mode = DIAG_MODE_ON;
+    dmBuffer.since = 0;
+    dmBuffer.until = INF;
+
+    return 0;
+  } else if (mode == DIAG_MODE_OFF) {
+    dmBuffer.mode = DIAG_MODE_OFF;
+    dmBuffer.since = INF;
+    dmBuffer.until = INF;
+
+    return 0;
+  } else if (mode == DIAG_MODE_SECONDS) {
+    dmBuffer.mode = DIAG_MODE_SECONDS;
+    acquire(&tickslock);
+    dmBuffer.since = ticks;  
+    dmBuffer.until = ticks + time;  
+    release(&tickslock);
+
+    return 0;
+  }
+
+  return 1;
 }

@@ -40,3 +40,4 @@ entry("dmesg");
 entry("dmesgsend");
 entry("hello");
 entry("lockcall");
+entry("diagmode");

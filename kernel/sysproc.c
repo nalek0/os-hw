@@ -112,7 +112,9 @@ sys_dmesgsend(void)
   
   return 0;
 }
-uint64 sys_hello(void)
+
+uint64
+sys_hello(void)
 {
   int n1, n2;
   
@@ -122,7 +124,8 @@ uint64 sys_hello(void)
   return n1 + n2;
 }
 
-uint64 sys_lockcall(void)
+uint64 
+sys_lockcall(void)
 {
   int action, action_arg;
   
@@ -148,4 +151,15 @@ uint64 sys_lockcall(void)
   default:
     return 1;
   }
+}
+
+uint64 
+sys_diagmode(void) {
+  int mode;
+  uint64 arg;
+  
+  argint(0, &mode);
+  argaddr(1, &arg);
+
+  return update_diagmode(mode, arg);
 }

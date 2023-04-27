@@ -199,3 +199,4 @@ void            virtio_disk_intr(void);
 void            initDMBuffer(void);
 void            pr_msg(const char *fmt, ...);
 void            cpybuf(uint64);
+int             update_diagmode(int, uint64);

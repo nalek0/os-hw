@@ -24,3 +24,4 @@
 #define SYS_dmesgsend   23
 #define SYS_hello       24
 #define SYS_lockcall    25
+#define SYS_diagmode    26

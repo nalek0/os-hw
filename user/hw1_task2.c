@@ -20,7 +20,6 @@ int main(int argc, char *argv[]) {
 
 	char * message = argv[1];
 
-	printf("%d\n", hello(1, 2));
 	int output_lock = lockcall(INIT_ACTION, 0);
 
 	int from_par[2];
