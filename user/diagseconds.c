@@ -21,5 +21,7 @@ int main(int argc, char *argv[]) {
 
     int result = diagmode(DIAG_MODE_SECONDS, seconds);
 
+    printf("Set mode: DIAG_MODE_SECONDS\n");
+
     exit(result);
 }

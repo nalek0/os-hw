@@ -5,5 +5,7 @@
 int main(int argc, char *argv[]) {
     int result = diagmode(DIAG_MODE_OFF, 0);
 
+    printf("Set mode: DIAG_MODE_OFF\n");
+
     exit(result);
 }
