@@ -1,0 +1,4 @@
+#define INIT_ACTION     1
+#define REMOVE_ACTION   2
+#define ACQUIRE_ACTION  3
+#define RELEASE_ACTION  4

@@ -124,6 +124,13 @@ void            releasesleep(struct sleeplock*);
 int             holdingsleep(struct sleeplock*);
 void            initsleeplock(struct sleeplock*, char*);
 
+// sleeplocktable.c
+void            sleeplocktableinit(void);
+int             sleeplocktable_init(void);
+void            sleeplocktable_remove(uint8 ind);
+void            sleeplocktable_acquire(uint8 ind);
+void            sleeplocktable_release(uint8 ind);
+
 // string.c
 int             memcmp(const void*, const void*, uint);
 void*           memmove(void*, const void*, uint);
@@ -187,3 +194,9 @@ void            virtio_disk_intr(void);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))
+
+// diag.c
+void            initDMBuffer(void);
+void            pr_msg(const char *fmt, ...);
+void            cpybuf(uint64);
+int             update_diagmode(int, uint64);

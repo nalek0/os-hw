@@ -36,3 +36,8 @@ entry("getpid");
 entry("sbrk");
 entry("sleep");
 entry("uptime");
+entry("dmesg");
+entry("dmesgsend");
+entry("hello");
+entry("lockcall");
+entry("diagmode");
