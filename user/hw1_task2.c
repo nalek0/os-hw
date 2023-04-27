@@ -71,12 +71,6 @@ int main(int argc, char *argv[]) {
 			error("Lock error");
 		}
 
-		char dmbuf[DMBSIZE];
-
-		dmesg(dmbuf);
-
-		printf("Saved buff:\n%s", dmbuf);
-
 		exit(0);
 	} else {
 		// Children

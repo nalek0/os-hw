@@ -141,6 +141,7 @@ UPROGS=\
 	$U/_diagon\
 	$U/_diagoff\
 	$U/_diagseconds\
+	$U/_diagbuff\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
