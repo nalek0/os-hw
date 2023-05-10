@@ -200,9 +200,7 @@ devintr()
     if(irq)
       plic_complete(irq);
 
-    if (can_send_idm()) {
-      pr_msg("devintr(): device(irq=%d) interruption.\n", irq);
-    }
+    send_devintr_idm("devintr(): device(irq=%d) interruption.\n", irq);
 
     return 1;
   } else if(scause == 0x8000000000000001L){
@@ -219,9 +217,7 @@ devintr()
 
     return 2;
   } else {
-    if (can_send_idm()) {
-      pr_msg("devintr(): undefined device interruption.\n");
-    }
+    send_devintr_undef("devintr(): undefined device interruption.\n");
 
     return 0;
   }

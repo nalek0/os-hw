@@ -6,6 +6,7 @@
 #include "param.h"
 #include "spinlock.h"
 #include "sleeplock.h"
+#include "proc.h"
 
 struct {
     uint mode;
@@ -76,4 +77,22 @@ can_send_idm() {
   release(&IDMSettings.lock);
 
   return result;
+}
+
+void send_syscall_idm(const char * fmt, const char * syscall_name, const struct proc * p) {
+  if (can_send_idm()) {
+    pr_msg("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_name, p->name, p->pid);
+  }
+}
+
+void send_devintr_idm(const char * fmt, int irq) {
+  if (can_send_idm()) {
+    pr_msg("devintr(): device(irq=%d) interruption.\n", irq);
+  }
+}
+
+void send_devintr_undef(const char * fmt) {
+  if (can_send_idm()) {
+    pr_msg("devintr(): undefined device interruption.\n");
+  }
 }

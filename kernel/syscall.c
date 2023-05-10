@@ -180,9 +180,7 @@ syscall(void)
   if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
-    if (can_send_idm()) {
-      pr_msg("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_names[num], p->name, p->pid);
-    }
+    send_syscall_idm("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_names[num], p);
 
     p->trapframe->a0 = syscalls[num]();
   } else {
