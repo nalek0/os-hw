@@ -200,5 +200,7 @@ void            initDMBuffer(void);
 void            pr_msg(const char *fmt, ...);
 void            cpybuf(uint64);
 int             update_diagmode(int, uint64);
+
+// idmesg.c
 void            initIDMSettings(void);
 int             can_send_idm(void);
