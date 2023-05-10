@@ -209,23 +209,35 @@ void cpybuf(uint64 addr) {
 int
 update_diagmode(int mode, uint64 time) {
   if (mode == DIAG_MODE_ON) {
+    acquire(&dmBuffer.lock);
+
     dmBuffer.mode = DIAG_MODE_ON;
     dmBuffer.since = 0;
     dmBuffer.until = INF;
 
+    release(&dmBuffer.lock);
+
     return 0;
   } else if (mode == DIAG_MODE_OFF) {
+    acquire(&dmBuffer.lock);
+
     dmBuffer.mode = DIAG_MODE_OFF;
     dmBuffer.since = INF;
     dmBuffer.until = INF;
 
+    release(&dmBuffer.lock);
+
     return 0;
   } else if (mode == DIAG_MODE_SECONDS) {
+    acquire(&dmBuffer.lock);
+
     dmBuffer.mode = DIAG_MODE_SECONDS;
     acquire(&tickslock);
     dmBuffer.since = ticks;  
     dmBuffer.until = ticks + time;  
     release(&tickslock);
+
+    release(&dmBuffer.lock);
 
     return 0;
   }
