@@ -181,7 +181,7 @@ syscall(void)
     // Use num to lookup the system call function for num, call it,
     // and store its return value in p->trapframe->a0
     if (can_send_idm()) {
-      pr_msg("syscall `%s` interruption.\n", syscall_names[num]);
+      pr_msg("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_names[num], p->name, p->pid);
     }
 
     p->trapframe->a0 = syscalls[num]();
