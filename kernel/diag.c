@@ -18,10 +18,6 @@ struct {
     uint cursor_start;
     uint cursor_end;
 
-    uint mode;
-    uint64 since;
-    uint64 until;
-
     // buffer lock
     struct spinlock lock;
 } dmBuffer;
@@ -31,8 +27,6 @@ void initDMBuffer() {
     printf("init: dmbuffer\n");
 
     initlock(&dmBuffer.lock, "dmbuffer");
-
-    dmBuffer.mode = DIAG_MODE_OFF;
 }
 
 static void setChar(uint ind, char ch) {
@@ -92,16 +86,6 @@ static void setNextInt(int xx, int base, int sign) {
 // puts message in the dm buffer
 void pr_msg(const char *fmt, ...)
 {
-  uint current_time;
-  
-  acquire(&tickslock);
-  current_time = ticks;
-  release(&tickslock);
-  
-  if (current_time > dmBuffer.until || current_time < dmBuffer.since) {
-    return;
-  }
-
   // lock:
   acquire(&dmBuffer.lock);
 
@@ -206,41 +190,75 @@ void cpybuf(uint64 addr) {
   release(&dmBuffer.lock);
 }
 
+// interruption diagnostic messages
+
+struct {
+    uint mode;
+    uint64 since;
+    uint64 until;
+
+    struct spinlock lock;
+} IDMSettings; 
+
+void initIDMSettings() {
+  printf("init: IDMSettings\n");
+
+  initlock(&IDMSettings.lock, "IDMSettings");
+
+  IDMSettings.mode = DIAG_MODE_OFF;
+}
+
 int
 update_diagmode(int mode, uint64 time) {
   if (mode == DIAG_MODE_ON) {
-    acquire(&dmBuffer.lock);
+    acquire(&IDMSettings.lock);
 
-    dmBuffer.mode = DIAG_MODE_ON;
-    dmBuffer.since = 0;
-    dmBuffer.until = INF;
+    IDMSettings.mode = DIAG_MODE_ON;
+    IDMSettings.since = 0;
+    IDMSettings.until = INF;
 
-    release(&dmBuffer.lock);
+    release(&IDMSettings.lock);
 
     return 0;
   } else if (mode == DIAG_MODE_OFF) {
-    acquire(&dmBuffer.lock);
+    acquire(&IDMSettings.lock);
 
-    dmBuffer.mode = DIAG_MODE_OFF;
-    dmBuffer.since = INF;
-    dmBuffer.until = INF;
+    IDMSettings.mode = DIAG_MODE_OFF;
+    IDMSettings.since = INF;
+    IDMSettings.until = INF;
 
-    release(&dmBuffer.lock);
+    release(&IDMSettings.lock);
 
     return 0;
   } else if (mode == DIAG_MODE_SECONDS) {
-    acquire(&dmBuffer.lock);
+    acquire(&IDMSettings.lock);
 
-    dmBuffer.mode = DIAG_MODE_SECONDS;
+    IDMSettings.mode = DIAG_MODE_SECONDS;
     acquire(&tickslock);
-    dmBuffer.since = ticks;  
-    dmBuffer.until = ticks + time;  
+    IDMSettings.since = ticks;  
+    IDMSettings.until = ticks + time;  
     release(&tickslock);
 
-    release(&dmBuffer.lock);
+    release(&IDMSettings.lock);
 
     return 0;
   }
 
   return 1;
+}
+
+int 
+can_send_idm() {
+  uint current_time;
+  int result;
+  
+  acquire(&tickslock);
+  current_time = ticks;
+  release(&tickslock);
+
+  acquire(&IDMSettings.lock);
+  result = current_time <= IDMSettings.until && current_time >= IDMSettings.since;
+  release(&IDMSettings.lock);
+
+  return result;
 }
