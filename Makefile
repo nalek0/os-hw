@@ -134,7 +134,6 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
-	$U/_dmesg\
 	$U/_syscalltest\
 	$U/_c_hello_world\
 	$U/_hw1_task1\
