@@ -19,3 +19,7 @@
 #define DIAG_MODE_ON        1 // diagnostics messages are turned on
 #define DIAG_MODE_OFF       2 // diagnostics messages are turned off
 #define DIAG_MODE_SECONDS   3 // diagnostics messages are turned on for the given amount of time
+// Settings ids:
+#define SYSCALL_IDM_SETTINGS 1
+#define DEVINTR_IDM_SETTINGS 2
+#define CONTEXT_IDM_SETTINGS 3

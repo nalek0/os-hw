@@ -27,6 +27,7 @@ main()
     binit();         // buffer cache
     iinit();         // inode table
     initDMBuffer();  // dmbuffer init
+    initIDMSettings(); // idmSettings init
     fileinit();      // file table
     sleeplocktableinit(); // init sleeplock table
     virtio_disk_init(); // emulated hard disk
