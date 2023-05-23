@@ -8,52 +8,63 @@
 #include "sleeplock.h"
 #include "proc.h"
 
-struct settings {
+struct idm_settings {
   uint mode;
   uint64 since;
   uint64 until;
+
+  struct spinlock lock;
 };
 
 struct {
-  struct settings syscall_settings;
-  struct settings devintr_settings;
-  struct settings context_settings;
-
-  struct spinlock lock;
+  struct idm_settings syscall_settings;
+  struct idm_settings devintr_settings;
+  struct idm_settings context_settings;
 } IDMSettings; // interruption diagnostic messages
 
-void
-initIDMSettings() {
+// public 
+void initIDMSettings() {
   printf("init: IDMSettings\n");
 
-  initlock(&IDMSettings.lock, "IDMSettings");
+  initlock(&IDMSettings.syscall_settings.lock, "IDMSettings.syscall_settings");
+  initlock(&IDMSettings.devintr_settings.lock, "IDMSettings.devintr_settings");
+  initlock(&IDMSettings.context_settings.lock, "IDMSettings.context_settings");
 
   IDMSettings.syscall_settings.mode = DIAG_MODE_OFF;
   IDMSettings.devintr_settings.mode = DIAG_MODE_OFF;
+  IDMSettings.context_settings.mode = DIAG_MODE_OFF;
 }
 
-void
-update_settings(struct settings * settings, int mode, uint64 time) {
+// private
+void update_settings(struct idm_settings * settings, int mode, uint64 time) {
   if (mode == DIAG_MODE_ON) {
+    acquire(&settings->lock);
     settings->mode = DIAG_MODE_ON;
     settings->since = 0;
     settings->until = INF;
+    release(&settings->lock);
   } else if (mode == DIAG_MODE_OFF) {
+    acquire(&settings->lock);
     settings->mode = DIAG_MODE_OFF;
     settings->since = INF;
     settings->until = INF;
+    release(&settings->lock);
   } else if (mode == DIAG_MODE_SECONDS) {
-    settings->mode = DIAG_MODE_SECONDS;
-
+    int ticks_now;
     acquire(&tickslock);
-    settings->since = ticks;  
-    settings->until = ticks + time;  
+    ticks_now = ticks;  
     release(&tickslock);
+
+    acquire(&settings->lock);
+    settings->mode = DIAG_MODE_SECONDS;
+    settings->since = ticks_now;  
+    settings->until = ticks_now + time;  
+    release(&settings->lock);
   }
 }
 
-int
-update_diagmode(int settings_id, int mode, uint64 time) {
+// public
+int update_diagmode(int settings_id, int mode, uint64 time) {
   if (settings_id == SYSCALL_IDM_SETTINGS) {
     update_settings(&IDMSettings.syscall_settings, mode, time);
 
@@ -71,10 +82,11 @@ update_diagmode(int settings_id, int mode, uint64 time) {
   }
 }
 
-int
-accept_settings(int settings_id) {
+// public
+int accept_settings(int settings_id) {
   int ticks_now;
-  struct settings settings;
+  int result;
+  struct idm_settings settings;
 
   if (settings_id == SYSCALL_IDM_SETTINGS) {
     settings = IDMSettings.syscall_settings;
@@ -88,5 +100,9 @@ accept_settings(int settings_id) {
   ticks_now = ticks;  
   release(&tickslock);
   
-  return settings.since <= ticks_now && ticks_now < settings.until;
+  acquire(&settings.lock);
+  result = settings.since <= ticks_now && ticks_now < settings.until;
+  release(&settings.lock);
+
+  return result;
 }
