@@ -155,11 +155,13 @@ sys_lockcall(void)
 
 uint64 
 sys_diagmode(void) {
+  int settings_id;
   int mode;
   uint64 arg;
   
-  argint(0, &mode);
-  argaddr(1, &arg);
+  argint(0, &settings_id);
+  argint(1, &mode);
+  argaddr(2, &arg);
 
-  return update_diagmode(mode, arg);
+  return update_diagmode(settings_id, mode, arg);
 }

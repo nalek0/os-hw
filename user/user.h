@@ -26,7 +26,7 @@ int dmesg(void *);
 int dmesgsend(const char *);
 int hello(int, int);
 int lockcall(int, int);
-int diagmode(int, int);
+int diagmode(int, int, int);
 
 // ulib.c
 int stat(const char*, struct stat*);

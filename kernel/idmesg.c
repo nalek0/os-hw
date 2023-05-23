@@ -8,91 +8,88 @@
 #include "sleeplock.h"
 #include "proc.h"
 
-struct {
-    uint mode;
-    uint64 since;
-    uint64 until;
+struct settings {
+  uint mode;
+  uint64 since;
+  uint64 until;
+};
 
-    struct spinlock lock;
+struct {
+  struct settings syscall_settings;
+  struct settings devintr_settings;
+
+  struct spinlock lock;
 } IDMSettings; // interruption diagnostic messages
 
-void initIDMSettings() {
+void
+initIDMSettings() {
   printf("init: IDMSettings\n");
 
   initlock(&IDMSettings.lock, "IDMSettings");
 
-  IDMSettings.mode = DIAG_MODE_OFF;
+  IDMSettings.syscall_settings.mode = DIAG_MODE_OFF;
+  IDMSettings.devintr_settings.mode = DIAG_MODE_OFF;
+}
+
+void
+update_settings(struct settings * settings, int mode, uint64 time) {
+  if (mode == DIAG_MODE_ON) {
+    settings->mode = DIAG_MODE_ON;
+    settings->since = 0;
+    settings->until = INF;
+  } else if (mode == DIAG_MODE_OFF) {
+    settings->mode = DIAG_MODE_OFF;
+    settings->since = INF;
+    settings->until = INF;
+  } else if (mode == DIAG_MODE_SECONDS) {
+    settings->mode = DIAG_MODE_SECONDS;
+
+    acquire(&tickslock);
+    settings->since = ticks;  
+    settings->until = ticks + time;  
+    release(&tickslock);
+  }
 }
 
 int
-update_diagmode(int mode, uint64 time) {
-  if (mode == DIAG_MODE_ON) {
-    acquire(&IDMSettings.lock);
-
-    IDMSettings.mode = DIAG_MODE_ON;
-    IDMSettings.since = 0;
-    IDMSettings.until = INF;
-
-    release(&IDMSettings.lock);
+update_diagmode(int settings_id, int mode, uint64 time) {
+  if (settings_id == SYSCALL_IDM_SETTINGS) {
+    update_settings(&IDMSettings.syscall_settings, mode, time);
 
     return 0;
-  } else if (mode == DIAG_MODE_OFF) {
-    acquire(&IDMSettings.lock);
-
-    IDMSettings.mode = DIAG_MODE_OFF;
-    IDMSettings.since = INF;
-    IDMSettings.until = INF;
-
-    release(&IDMSettings.lock);
+  } else if (settings_id == DEVINTR_IDM_SETTINGS) {
+    update_settings(&IDMSettings.devintr_settings, mode, time);
 
     return 0;
-  } else if (mode == DIAG_MODE_SECONDS) {
-    acquire(&IDMSettings.lock);
-
-    IDMSettings.mode = DIAG_MODE_SECONDS;
-    acquire(&tickslock);
-    IDMSettings.since = ticks;  
-    IDMSettings.until = ticks + time;  
-    release(&tickslock);
-
-    release(&IDMSettings.lock);
-
-    return 0;
+  } else {
+    return 1;
   }
-
-  return 1;
 }
 
-int 
-can_send_idm() {
-  uint current_time;
-  int result;
-  
+int
+accept(struct settings * settings) {
+  int ticks_now;
   acquire(&tickslock);
-  current_time = ticks;
+  ticks_now = ticks;  
   release(&tickslock);
-
-  acquire(&IDMSettings.lock);
-  result = current_time <= IDMSettings.until && current_time >= IDMSettings.since;
-  release(&IDMSettings.lock);
-
-  return result;
+  
+  return settings->since <= ticks_now && ticks_now < settings -> until;
 }
 
 void send_syscall_idm(const char * fmt, const char * syscall_name, const struct proc * p) {
-  if (can_send_idm()) {
+  if (accept(&IDMSettings.syscall_settings)) {
     pr_msg("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_name, p->name, p->pid);
   }
 }
 
 void send_devintr_idm(const char * fmt, int irq) {
-  if (can_send_idm()) {
+  if (accept(&IDMSettings.devintr_settings)) {
     pr_msg("devintr(): device(irq=%d) interruption.\n", irq);
   }
 }
 
 void send_devintr_undef(const char * fmt) {
-  if (can_send_idm()) {
+  if (accept(&IDMSettings.devintr_settings)) {
     pr_msg("devintr(): undefined device interruption.\n");
   }
 }
