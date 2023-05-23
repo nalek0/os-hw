@@ -132,6 +132,10 @@ UPROGS=\
 	$U/_grind\
 	$U/_wc\
 	$U/_zombie\
+	$U/_syscalltest\
+	$U/_c_hello_world\
+	$U/_hw1_task1\
+	$U/_hw1_task2\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
