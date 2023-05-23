@@ -203,7 +203,4 @@ int             update_diagmode(int, int, uint64);
 
 // idmesg.c
 void            initIDMSettings(void);
-int             can_send_idm(void);
-void            send_syscall_idm(const char *, const char *, const struct proc *);
-void            send_devintr_idm(const char *, int);
-void            send_devintr_undef(const char *);
+int             accept_settings(int settings_id);

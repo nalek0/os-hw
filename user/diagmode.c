@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
         printf("Editing SYSCALL_IDM_SETTINGS settings\n");
     } else if (settings_id == DEVINTR_IDM_SETTINGS) {
         printf("Editing DEVINTR_IDM_SETTINGS settings\n");
+    } else if (settings_id == CONTEXT_IDM_SETTINGS) {
+        printf("Editing CONTEXT_IDM_SETTINGS settings\n");
     } else {
         printf("Editing undefined settings\n");
     }

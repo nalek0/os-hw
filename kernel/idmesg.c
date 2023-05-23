@@ -17,6 +17,7 @@ struct settings {
 struct {
   struct settings syscall_settings;
   struct settings devintr_settings;
+  struct settings context_settings;
 
   struct spinlock lock;
 } IDMSettings; // interruption diagnostic messages
@@ -61,35 +62,31 @@ update_diagmode(int settings_id, int mode, uint64 time) {
     update_settings(&IDMSettings.devintr_settings, mode, time);
 
     return 0;
+  } else if (settings_id == CONTEXT_IDM_SETTINGS) {
+    update_settings(&IDMSettings.context_settings, mode, time);
+
+    return 0;
   } else {
     return 1;
   }
 }
 
 int
-accept(struct settings * settings) {
+accept_settings(int settings_id) {
   int ticks_now;
+  struct settings settings;
+
+  if (settings_id == SYSCALL_IDM_SETTINGS) {
+    settings = IDMSettings.syscall_settings;
+  } else if (settings_id == DEVINTR_IDM_SETTINGS) {
+    settings = IDMSettings.devintr_settings;
+  } else {
+    return 0;
+  }
+
   acquire(&tickslock);
   ticks_now = ticks;  
   release(&tickslock);
   
-  return settings->since <= ticks_now && ticks_now < settings -> until;
-}
-
-void send_syscall_idm(const char * fmt, const char * syscall_name, const struct proc * p) {
-  if (accept(&IDMSettings.syscall_settings)) {
-    pr_msg("syscall `%s` interruption. process: '%s'(id=%d)\n", syscall_name, p->name, p->pid);
-  }
-}
-
-void send_devintr_idm(const char * fmt, int irq) {
-  if (accept(&IDMSettings.devintr_settings)) {
-    pr_msg("devintr(): device(irq=%d) interruption.\n", irq);
-  }
-}
-
-void send_devintr_undef(const char * fmt) {
-  if (accept(&IDMSettings.devintr_settings)) {
-    pr_msg("devintr(): undefined device interruption.\n");
-  }
+  return settings.since <= ticks_now && ticks_now < settings.until;
 }

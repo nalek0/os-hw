@@ -22,3 +22,4 @@
 // Settings ids:
 #define SYSCALL_IDM_SETTINGS 1
 #define DEVINTR_IDM_SETTINGS 2
+#define CONTEXT_IDM_SETTINGS 3

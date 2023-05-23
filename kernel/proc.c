@@ -460,6 +460,19 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+        
+        if (accept_settings(CONTEXT_IDM_SETTINGS)) {
+          struct context l = c->context;
+          struct context r = p->context;
+
+          pr_msg("switching contexts: [%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d] --> [%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d]. process: '%s'(id=%d)\n", 
+            l.ra, l.sp, 
+            l.s0, l.s1, l.s2, l.s3, l.s4, l.s5, l.s6, l.s7, l.s8, l.s9, l.s10, l.s11,
+            r.ra, r.sp, 
+            r.s0, r.s1, r.s2, r.s3, r.s4, r.s5, r.s6, r.s7, r.s8, r.s9, r.s10, r.s11,
+            p->name, p->pid);
+        }
+
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
