@@ -371,6 +371,52 @@ sys_open(void)
 }
 
 uint64
+sys_mkfile(void)
+{
+  char path[MAXPATH];
+  int filesize;
+  
+  argint(1, &filesize);
+  if(argstr(0, path, MAXPATH) < 0)
+    return -1;
+    
+  begin_op();
+
+  struct inode * ip = create(path, T_FILE, 0, 0);
+  struct file * f;
+  int fd;
+
+  if(ip == 0){
+    end_op();
+    return -1;
+  }
+
+  if((f = filealloc()) == 0 || (fd = fdalloc(f)) < 0){
+    if(f)
+      fileclose(f);
+      
+    iunlockput(ip);
+    end_op();
+    
+    return -1;
+  }
+
+  f->type = FD_INODE;
+  f->off = 0;
+  f->ip = ip;
+  f->readable = 1;
+  f->writable = 1;
+  
+  touchi(ip, filesize);
+
+  iunlock(ip);
+  end_op();
+
+
+  return fd;
+}
+
+uint64
 sys_mkdir(void)
 {
   char path[MAXPATH];
