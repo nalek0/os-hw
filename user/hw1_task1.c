@@ -19,10 +19,15 @@ void read_stdin(char * buf) {
 int main() {
 	// Init pipe
 	int p[2];
-	pipe(p);
+	
+	if (pipe(p) != 0) {
+		error("Pipe error.");
+	}
+
+	int pid = fork();
 
 	// Run different methods depending in what process we are 
-	if (fork() > 0) {
+	if (pid > 0) {
 		// Read stdin:
 		char input[BUFFER_SIZE];
 		read_stdin(input);
@@ -37,7 +42,7 @@ int main() {
 		wait((int *) 0);
 
 		exit(0);
-	} else {
+	} else if (pid == 0) {
 		// Set p[0] as input
 		close(0);
 		dup(p[0]);
@@ -50,6 +55,12 @@ int main() {
 		char * argv[2] = { "wc", 0 };
 
 		exec("wc", argv);
+	} else {
+		// Closing pipe
+		close(p[0]);
+		close(p[1]);
+
+		error("Fork error.");
 	}
 
 	exit(1);
