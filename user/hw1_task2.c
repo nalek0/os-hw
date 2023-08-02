@@ -24,10 +24,21 @@ int main(int argc, char *argv[]) {
 
 	int from_par[2];
 	int from_ch[2];
-	pipe(from_par);
-	pipe(from_ch);
+	
+	if (pipe(from_par) != 0) {
+		error("Pipe error.");
+	}
 
-	if (fork() > 0) {
+	if (pipe(from_ch) != 0) {
+		close(PIPE_READ(from_par));
+		close(PIPE_WRITE(from_par));
+
+		error("Pipe error.");
+	}
+
+	int fork_pid = fork();
+
+	if (fork_pid > 0) {
 		// Parent
 
 		int parent_pid = getpid();
@@ -37,7 +48,12 @@ int main(int argc, char *argv[]) {
 
 		// Sending message byte by byte to the children process
 		for (char * symb = message; *symb; symb++) {
-			write(PIPE_WRITE(from_par), symb, 1);
+			if (write(PIPE_WRITE(from_par), symb, 1) != 1) {
+				close(PIPE_WRITE(from_par));
+				close(PIPE_READ(from_ch));
+				
+				error("Write error.");
+			}
 		}
 
 		close(PIPE_WRITE(from_par));
@@ -72,7 +88,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		exit(0);
-	} else {
+	} else if (fork_pid == 0) {
 		// Children
 
 		int child_pid = getpid();
@@ -101,13 +117,25 @@ int main(int argc, char *argv[]) {
 			}
 			// End
 
-			write(PIPE_WRITE(from_ch), buf, 1);
+			if (write(PIPE_WRITE(from_ch), buf, 1) != 1) {
+				close(PIPE_READ(from_par));
+				close(PIPE_WRITE(from_ch));
+
+				error("Write error.");
+			}
 		}
 
 		close(PIPE_READ(from_par));
 		close(PIPE_WRITE(from_ch));
 
 		exit(0);
+	} else {
+		close(PIPE_READ(from_par));
+		close(PIPE_WRITE(from_par));
+		close(PIPE_READ(from_ch));
+		close(PIPE_WRITE(from_ch));
+
+		error("Fork error");
 	}
 
 	exit(1);
