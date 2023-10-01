@@ -23,6 +23,7 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int vmprint(void);
+int pgaccess(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
