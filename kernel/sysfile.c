@@ -503,3 +503,31 @@ sys_pipe(void)
   }
   return 0;
 }
+
+uint64
+sys_vmprint(void)
+{
+  vmprint(myproc()->pagetable);
+
+  return 0;
+}
+
+uint64
+sys_pgaccess(void)
+{
+  pagetable_t pagetable = myproc()->pagetable;
+  printf("page table: %p\n", pagetable);
+
+  for(int i = 0; i < 512; i++){
+    pte_t pte = pagetable[i];
+
+    if((pte & PTE_V) && (pte & (PTE_R|PTE_W|PTE_X)) == 0 && (pte & PTE_A)) {
+      // this PTE points to a lower-level page table.
+      printf(" ..%d: pte %p pa %p\n", i, pte, PTE2PA(pte));
+
+      pagetable[i] = pagetable[i] & ~PTE_A;
+    }
+  }
+
+  return 0;
+}
