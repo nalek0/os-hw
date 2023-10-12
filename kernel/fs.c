@@ -376,46 +376,118 @@ iunlockput(struct inode *ip)
 // are listed in ip->addrs[].  The next NINDIRECT blocks are
 // listed in block ip->addrs[NDIRECT].
 
+static uint double_indirect_bmap(struct inode *ip, uint bn) {
+  uint level1_addr;
+  uint level2_addr;
+
+  // Load indirect block, allocating if necessary.
+  if((level1_addr = ip->addrs[NDIRECT + 1]) == 0){
+    level1_addr = balloc(ip->dev);
+
+    if(level1_addr == 0)
+      return 0;
+    
+    ip->addrs[NDIRECT] = level1_addr;
+  }
+
+  struct buf * buffer_level1 = bread(ip->dev, level1_addr);
+  uint * level1 = (uint*) buffer_level1->data;
+  uint level1_bn = bn / NINDIRECT;
+
+  if((level2_addr = level1[level1_bn]) == 0){
+    level2_addr = balloc(ip->dev);
+
+    if(level2_addr == 0)
+      return 0;
+
+    level1[level1_bn] = level2_addr;
+    log_write(buffer_level1);
+  }
+
+  brelse(buffer_level1);
+
+  struct buf * buffer_level2 = bread(ip->dev, level2_addr);
+  uint * level2 = (uint*) buffer_level2->data;
+  uint level2_bn = bn % NINDIRECT;
+  uint addr;
+
+  if((addr = level2[level2_bn]) == 0){
+    addr = balloc(ip->dev);
+
+    if (addr) {
+      level2[level2_bn] = addr;
+      log_write(buffer_level2);
+    }
+  }
+
+  brelse(buffer_level2);
+  
+  return addr;
+}
+
+static uint singly_indirect_bmap(struct inode *ip, uint bn) {
+  uint addr, *a;
+  struct buf *bp;
+
+  // Load indirect block, allocating if necessary.
+  if((addr = ip->addrs[NDIRECT]) == 0){
+    addr = balloc(ip->dev);
+
+    if(addr == 0)
+      return 0;
+    
+    ip->addrs[NDIRECT] = addr;
+  }
+
+  bp = bread(ip->dev, addr);
+  a = (uint*)bp->data;
+  if((addr = a[bn]) == 0){
+    addr = balloc(ip->dev);
+
+    if(addr){
+      a[bn] = addr;
+      log_write(bp);
+    }
+  }
+
+  brelse(bp);
+  
+  return addr;
+}
+
+static uint direct_bmap(struct inode *ip, uint bn) {
+  uint addr;
+  
+  if((addr = ip->addrs[bn]) == 0) {
+    addr = balloc(ip->dev);
+
+    if(addr == 0)
+      return 0;
+    
+    ip->addrs[bn] = addr;
+  }
+
+  return addr;
+}
+
 // Return the disk block address of the nth block in inode ip.
 // If there is no such block, bmap allocates one.
 // returns 0 if out of disk space.
 static uint
 bmap(struct inode *ip, uint bn)
 {
-  uint addr, *a;
-  struct buf *bp;
+  if(bn < NDIRECT)
+    return direct_bmap(ip, bn);
 
-  if(bn < NDIRECT){
-    if((addr = ip->addrs[bn]) == 0){
-      addr = balloc(ip->dev);
-      if(addr == 0)
-        return 0;
-      ip->addrs[bn] = addr;
-    }
-    return addr;
-  }
   bn -= NDIRECT;
 
-  if(bn < NINDIRECT){
-    // Load indirect block, allocating if necessary.
-    if((addr = ip->addrs[NDIRECT]) == 0){
-      addr = balloc(ip->dev);
-      if(addr == 0)
-        return 0;
-      ip->addrs[NDIRECT] = addr;
-    }
-    bp = bread(ip->dev, addr);
-    a = (uint*)bp->data;
-    if((addr = a[bn]) == 0){
-      addr = balloc(ip->dev);
-      if(addr){
-        a[bn] = addr;
-        log_write(bp);
-      }
-    }
-    brelse(bp);
-    return addr;
-  }
+  if(bn < NINDIRECT)
+    return singly_indirect_bmap(ip, bn);
+
+  bn -= NINDIRECT;
+
+  if(bn < NDOUBLEINDIRECT)
+    return double_indirect_bmap(ip, bn);
 
   panic("bmap: out of range");
 }
