@@ -610,36 +610,6 @@ writei(struct inode *ip, int user_src, uint64 src, uint off, uint n)
   return tot;
 }
 
-int touchi(struct inode *ip, uint sz)
-{
-  struct buf *bp;
-
-  if(sz > MAXFILE*BSIZE)
-    return -1;
-
-  uint tot, off, m;
-
-  for(tot = 0, off = 0; tot < sz; tot += m, off+=m){
-    uint addr = bmap(ip, off / BSIZE);
-
-    if(addr == 0)
-      break;
-
-    bp = bread(ip->dev, addr);
-    m = min(sz - tot, BSIZE - off % BSIZE);
-
-    log_write(bp);
-    brelse(bp);
-  }
-
-  if(off > ip->size)
-    ip->size = off;
-
-  iupdate(ip);
-
-  return tot;
-}
-
 // Directories
 
 int
